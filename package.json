@@ -1,0 +1,34 @@
+{
+	"name": "int3rgr4mm",
+	"version": "0.1.0",
+	"author": "Kenan Sulayman",
+	"description": "The int3rgr4mm IRC bot.",
+	"contributors": [{
+		"name": "Kenan Sulayman",
+		"email": "kenan@sly.mn"
+	}],
+	"bin": {
+		"legify": "./int3r.js"
+	},
+	"scripts": {
+		"start": "node ./int3r.js"
+	},
+	"main": "./int3r.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/kenansulayman/int3rgr4mm.git"
+	},
+	"dependencies": {
+		"echtzeit": "*",
+		"hyperlevel": "*",
+		"irc": "*",
+		"level-sublevel": "*",
+		"level-version": "*",
+		"microtime-x": "*"
+	},
+	"engines": {
+		"node": ">0.9"
+	},
+	"os": ["win32", "darwin", "linux"],
+	"cpu": ["x64", "ia32", "!arm", "!mips"]
+}

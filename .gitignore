@@ -6,4 +6,3 @@ log
 lib/data/*
 *.log
 config.js
-logs/*
