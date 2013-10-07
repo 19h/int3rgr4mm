@@ -8,6 +8,8 @@ util = require("util"),
 fs = require("fs"),
 ez = require("echtzeit");
 
+!fs.existsSync("./logs") && fs.mkdirSync("./logs");
+
 var db = (function() {
 	var lru = {};
 
@@ -51,7 +53,7 @@ var config = {
 };
 
 var opts = {
-	channels: ["#int3rgr4mm", "#node.js"],
+	channels: ["#int3rgr4mm", "##leveldb", "#node.js"],
 	userName: "int3rgr4mm",
 	realName: "int3rgr4mm",
 	showErrors: true,
@@ -62,11 +64,7 @@ var opts = {
 var irc = require("irc"),
 bot = new irc.Client(config.server, config.botName, opts);
 
-bot.addListener("registered", function() {
-	setTimeout(function () {
-		bot.send("mode", "pr0log", "+i")
-	}, 500);
-});
+//bot.addListener("registered", function() {});
 
 bot.addListener("join", function (channel, who) {
 	pshim({type: "join", target: who}, channel)
@@ -97,9 +95,9 @@ bot.addListener("error", console.log);
 var stamp = function ( ver ) {
 	var datum = new Date(ver/1000);
 
-	var h = datum.getUTCHours(),
-	    m = datum.getUTCMinutes(),
-	    s = datum.getUTCSeconds();
+	var h = datum.getHours(),
+	    m = datum.getMinutes(),
+	    s = datum.getSeconds();
 
 	return (h > 9 ? h : "0" + h) + ":" + (m > 9 ? m : "0" + m) + ":" + (s > 9 ? s : "0" + s)
 };
@@ -122,9 +120,9 @@ var _style = "<style type=\"text/css\">*{font-family:\"Segoe UI\", Arial, Helvet
 
 var _render = function ( cn, dh, cb ) {
 	var d = new Date(dh * 86400000),
-	    h = d.getUTCFullYear(),
-	    m = d.getUTCMonth() + 1,
-	    s = d.getUTCDate();
+	    h = d.getFullYear(),
+	    m = d.getMonth() + 1,
+	    s = d.getDate();
 
 	var dstamp = (h > 9 ? h : "0" + h) + "-" + (m > 9 ? m : "0" + m) + "-" + (s > 9 ? s : "0" + s)
 
@@ -210,4 +208,4 @@ var srv = http.createServer(function (request, response) {
 
 by.attach(srv);
 
-srv.listen(8123, "87.106.69.16");
+srv.listen(8123);
