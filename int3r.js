@@ -247,6 +247,67 @@ var _index = function ( cn, _cb, exists ) {
 	}, _db, { start: "\xFF", limit: 1 })
 }
 
+var _stats = function ( cn, _cb, opts ) {
+	var users = {}, _db = db(cn);
+	var devs = {};
+
+	// find first key
+	read_bare( void 0, void 0, function (a) {
+		a = JSON.parse(a.value); var dev;
+
+		if ( a.type === "message" ) {
+			(!a.target.toLowerCase().indexOf("apex") || ~["apx", "apex|afk", "apexpredator", "apex"].indexOf(a.target)) && (dev = "apex");
+			!a.target.toLowerCase().indexOf("benis") && (dev = "benis");
+
+			if (dev) {
+				if (devs[dev]) {
+					!~devs[dev].indexOf(a.target) && devs[dev].push(a.target);
+				} else {
+					devs[dev] = [a.target]
+				}
+
+				a.target = dev + "*";
+			}
+
+			if ( users[a.target] ) {
+				++users[a.target].msgs;
+				users[a.target].words += a.payload.split(" ").length;
+			} else {
+				users[a.target] = {
+					msgs: 1,
+					words: a.payload.split(" ").length
+				}
+			}
+		}
+
+	}, function () {
+		var avg = opts === "avg",
+		  words = opts === "words" || !opts,
+		   msgs = opts === "msg";
+
+		users = Object.keys(users).map(function (v) {
+			users[v].avg = users[v].words / users[v].msgs
+			return [ v, users[v].msgs, users[v].words, users[v].words / users[v].msgs ]
+		}).sort(function (a, b) {
+			if ( avg ) {
+				return b[3] - a[3]
+			} else if ( words ) {
+				return b[2] - a[2]
+			} else {
+				return b[1] - a[1]
+			}
+		})
+
+		var _devs = "<br/>" + Object.keys(devs).map(function (v) {
+			return v + "* combines possible duplicates: " + devs[v].join(", ")
+		}).join("<br/>")
+
+		_cb("<table style='font-family: sans-serif;text-align:left;' cellspacing='10'><tr><th>Name</th><th>" + (msgs ? "Messages" : "<a href='/" + cn.split("#").join("") + "/stats/msg'>Messages</a>") + "</th><th>" + (words ? "Words" : "<a href='/" + cn.split("#").join("") + "/stats/words'>Words</a>") + "</th><th>" + (avg ? "Avg. Words / Message" : "<a href='/" + cn.split("#").join("") + "/stats/avg'>Avg. Words / Message</a>") + "</th></tr>"+users.map(function (v) {
+			return "<tr><th>" + v.join("</th><th>") + "</th></tr>"
+		}).join("\n")+"</table>" + _devs)
+	}, _db, {})
+}
+
 var client = fs.readFileSync("./client.js"),
 lruc = {}, cindex = "";
 
@@ -292,6 +353,13 @@ var srv = http.createServer(function (request, response) {
 				response.writeHead(200,{ "Connection": "yolo"}), response.end(v)
 			});
 		}
+
+		if ( (swap = request.url.substr(1, request.url.indexOf("/stats") - 1)) in lruc ) {
+			return _stats ( lruc[swap], function (v) {
+				response.writeHead(200,{ "Connection": "yolo"}), response.end(v)
+			}, request.url.substr(request.url.indexOf("/stats") + 7));
+		}
+
 
 		if ( (swap = request.url.substr(1, request.url.substr(1).indexOf("/"))) in lruc ) {
 			var stamp;
