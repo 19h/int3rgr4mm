@@ -340,8 +340,7 @@ var _stats = function ( cn, _cb, opts ) {
 	}, _db, {})
 }
 
-var client = fs.readFileSync("./client.js"),
-lruc = {}, cindex = "";
+var lruc = {}, cindex = "";
 
 opts.channels.forEach(function(v) {
 	return lruc[v.split("#").join("")] = v
@@ -361,9 +360,6 @@ clientjs = ["<script type=\"text/javascript\">window.$$$ = function(u, cb, async
 	    "', function(data) {if(data&&data.payload){var jump=window.scrollY+window.innerHeight>=document.body.clientHeight-20;document.body.querySelector(\"tbody\").innerHTML += data.payload;jump&&(window.scrollTo(0,document.body.scrollHeight))}});}, true);</script>"]
 
 var srv = http.createServer(function (request, response) {
-	if ( request.url === "/client.js" )
-		return response.end(client);
-
 	process.nextTick(function () {
 		var swap;
 
