@@ -55,7 +55,7 @@ var config = {
 };
 
 var opts = {
-	channels: ["#int3rgr4mm", "##leveldb", "#node.js"],
+	channels: ["#int3rgr4mm"],
 	userName: "int3rgr4mm",
 	realName: "int3rgr4mm",
 	showErrors: true,
@@ -132,7 +132,9 @@ var dhashFromStamp = function (stamp) {
 var transform = function( str ) {
 	str = str || "";
 
-	var x = "";
+	return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+	/*var x = "";
 
 	for(var i = 0; i < str.length; ++i)
 		if (str[i].charCodeAt(0) > 127)
@@ -140,7 +142,7 @@ var transform = function( str ) {
 		else
 			x += str[i]
 
-	return x;
+	return x;*/
 };
 
 var _style = "<style type=\"text/css\">*{font-family:\"Segoe UI\", Arial, Helvetica, sans-serif;font-size:10pt}body,html{margin:0;padding:0}a:hover,a:active,a:focus{color:red}ul{padding:0 0 0 2em}div.navigation{background:#eee;height:1.5em;left:0;padding:.333em .666em;position:fixed;top:0;width:100%}div.navigation span.title{color:#444;font-weight:700}div.index,div.log{margin:2.5em 0 0;padding:0 .333em 1em}div.channels{margin:1.5em 0 0;padding:0 .333em 1em}table.log{border-collapse:collapse}table.log tr td{border:0;padding:.1em .5em;vertical-align:top}table.log tr td.time{border-right:1px solid #eee}table.log tr td.time a{color:#444;text-decoration:none}table.log tr td.time a.time-anchor{position:relative;top:-2.5em;visibility:hidden}table.log tr.kick td.content{color:red;font-style:italic}table.log tr.message td.content{color:#000}table.log tr.message td.content span.inverse{background-color:#000;color:#FFF}table.log tr.message td.content a.inverse{background-color:#000}table.log tr.message td.content .italic{font-style:italic}table.log tr.message td.content .monospace{font-family:monospace;white-space:pre}a,a:visited,table.log tr.message td.nick{color:#c50}div.navigation span.nolink,table.log tr.action td.nick,table.log tr.join td.nick,table.log tr.quit td.nick,table.log tr.part td.nick,table.log tr.kick td.nick,table.log tr.nick td.nick,table.log tr.topic td.nick{color:#444}table.log tr td.time a:hover,table.log tr.message td.content .underline{text-decoration:underline}table.log tr.action td.content,table.log tr.join td.content,table.log tr.quit td.content,table.log tr.part td.content,table.log tr.nick td.content,table.log tr.topic td.content{color:#444;font-style:italic}table.log tr.kick td.content span.victim,table.log tr.nick td.content span.new_nick,table.log tr.topic td.content span.topic,table.log tr.message td.content .bold{font-weight:700}</style>";
@@ -336,6 +338,12 @@ var srv = http.createServer(function (request, response) {
 			return response.end( cindex );
 		}
 
+		if ( request.url === "/robots.txt" ) {
+			return response.writeHead(200, {
+				"Content-type": "text/plain"
+			}), response.end("User-agent: *\nDisallow: /");
+		}
+
 		if ( request.url.substr(1) in lruc ) {
 			return response.writeHead(307, {
 				"Location": request.url + "/latest"
@@ -344,22 +352,21 @@ var srv = http.createServer(function (request, response) {
 
 		if ( (swap = request.url.substr(1, request.url.indexOf("/latest") - 1)) in lruc ) {
 			return _render( lruc[swap], dhash(), function (v) {
-				response.writeHead(200,{ "Connection": "yolo"}), response.end(v)
+				response.writeHead(200,{ "Connection": "yolo", "Content-type": "text/html; charset=UTF-8" }), response.end(v)
 			})
 		}
 
 		if ( (swap = request.url.substr(1, request.url.indexOf("/index") - 1)) in lruc ) {
 			return _index ( lruc[swap], function (v) {
-				response.writeHead(200,{ "Connection": "yolo"}), response.end(v)
+				response.writeHead(200,{ "Connection": "yolo", "Content-type": "text/html; charset=UTF-8" }), response.end(v)
 			});
 		}
 
 		if ( (swap = request.url.substr(1, request.url.indexOf("/stats") - 1)) in lruc ) {
 			return _stats ( lruc[swap], function (v) {
-				response.writeHead(200,{ "Connection": "yolo"}), response.end(v)
+				response.writeHead(200,{ "Connection": "yolo", "Content-type": "text/html; charset=UTF-8" }), response.end(v)
 			}, request.url.substr(request.url.indexOf("/stats") + 7));
 		}
-
 
 		if ( (swap = request.url.substr(1, request.url.substr(1).indexOf("/"))) in lruc ) {
 			var stamp;
@@ -368,7 +375,7 @@ var srv = http.createServer(function (request, response) {
 				return _index ( lruc[swap], function (exists) {
 					if ( exists )
 						return _render( lruc[swap], stamp, function (v) {
-							response.writeHead(200,{ "Connection": "yolo"}), response.end(v)
+							response.writeHead(200,{ "Connection": "yolo", "Content-type": "text/html; charset=UTF-8" }), response.end(v)
 						})
 
 					return response.end();
