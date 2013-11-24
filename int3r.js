@@ -72,7 +72,7 @@ var pshim = function ( plain, channel ) {
 		_e += "<td class=\"content\">" + transform(plain.payload) + "</td></tr>";
 	}
 
-	by.getClient().publish("/" + channel.split("#").join("") + "/latest", { payload: _e });
+	by.getClient().publish("/" + String(channel).split("#").join("").split(".").join("") + "/latest", { payload: _e });
 
 	push(JSON.stringify(plain), void 0, channel);
 }
@@ -224,7 +224,7 @@ var _render = function ( cn, dh, cb ) {
 				y.push(_e);
 			}, function () {
 				x += y.reverse().join("\n");
-				x += "</tbody></table></div></body>" + clientjs[0] + "/" + cn.split("#").join("") + "/latest" + clientjs[1] + "</html>";
+				x += "</tbody></table></div></body>" + (dh === dhash() ? clientjs[0] + "/" + cn.split("#").join("").split(".").join("") + "/latest" + clientjs[1] : "") + "</html>";
 				
 				cb(x)
 			})
