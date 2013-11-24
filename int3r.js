@@ -90,6 +90,9 @@ var opts = {
 	channels: ["#int3rgr4mm"],
 	userName: "int3rgr4mm",
 	realName: "int3rgr4mm",
+	userPass: "<password>",
+	nickserv: false,
+	quakenet: true,
 	showErrors: true,
 	sep: "\u9999",
 	debug: true
@@ -99,6 +102,24 @@ var irc = require("irc"),
 bot = new irc.Client(config.server, config.botName, opts);
 
 //bot.addListener("registered", function() {});
+
+if(opts.quakenet == true && opts.userName.length != 0 && opts.userPass.length != 0) {
+	bot.addListener("registered", function() {
+		bot.say("Q@CServe.quakenet.org", "AUTH " + opts.userName + " " + opts.userPass + "")
+		setTimeout(function () {
+			bot.send("mode", config.botName, "+x")
+		}, 500);
+	});
+}
+
+if(opts.nickserv == true && opts.userPass.length != 0) {
+	bot.addListener("registered", function() {
+		bot.say("NickServ", "identify " + opts.userPass + "")
+		setTimeout(function () {
+			bot.send("mode", config.botName, "+x")
+		}, 500);
+	});
+}
 
 bot.addListener("join", function (channel, who) {
 	pshim({type: "join", target: who}, channel)
