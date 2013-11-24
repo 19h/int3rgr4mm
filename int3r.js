@@ -72,6 +72,8 @@ var pshim = function ( plain, channel ) {
 		_e += "<td class=\"content\">" + transform(plain.payload) + "</td></tr>";
 	}
 
+	_e = _e.replace(/\b((https?:\/\/)|www\.)([^\s()<>]+(?:\([\w\d]+\)|([^,\.\(\)<>!?\s]|\/)))/g,function(url,httpwww,http,hostandpath){if(!http){url='http://'+url;}return '<a href="'+url+'">'+hostandpath+'</a>'});
+
 	by.getClient().publish("/" + String(channel).split("#").join("").split(".").join("") + "/latest", { payload: _e });
 
 	push(JSON.stringify(plain), void 0, channel);
@@ -220,6 +222,8 @@ var _render = function ( cn, dh, cb ) {
 					_e += "<td class=\"nick\">&lt;" + entry.target + "&gt;</td>"
 					_e += "<td class=\"content\">" + transform(entry.payload) + "</td></tr>";
 				}
+
+				_e = _e.replace(/\b((https?:\/\/)|www\.)([^\s()<>]+(?:\([\w\d]+\)|([^,\.\(\)<>!?\s]|\/)))/g,function(url,httpwww,http,hostandpath){if(!http){url='http://'+url;}return '<a href="'+url+'">'+hostandpath+'</a>'});
 
 				y.push(_e);
 			}, function () {
