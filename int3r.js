@@ -44,6 +44,36 @@ var read_bare = function ( cn, dh, cb, end, db, opts ) {
 };
 
 var pshim = function ( plain, channel ) {
+	var datum = new Date;
+
+	var h = datum.getUTCHours(),
+	    m = datum.getUTCMinutes(),
+	    s = datum.getUTCSeconds();
+
+	var _stmp = (h > 9 ? h : "0" + h) + ":" + (m > 9 ? m : "0" + m) + ":" + (s > 9 ? s : "0" + s),
+	_svbs = ~~(((+datum/1000)%1)*1000);
+
+	var _e = "<tr class=\"" + plain.type + "\">";
+	    _e += "<td class=\"time\"><a href=\"#" + _stmp + "." + _svbs + "\">" + _stmp + "</a><a name=\"" + _stmp + "." + _svbs + "\" class=\"time-anchor\">&nbsp;</a></td>";
+
+	if (~["part", "quit", "join"].indexOf(plain.type)) {
+		_e += "<td class=\"nick\">*  " + plain.target + "</td>"
+		
+		if ( plain.type !== "join" ) {
+			_e += "<td class=\"content\">" + plain.type + "<span class=\"reason\">" + (plain.payload ? " (" + transform(plain.payload) + ")" : "") + "</span></td></tr>";
+		} else {
+			_e += "<td class=\"content\">joined</td></tr>";
+		}
+	} else if ( plain.type === "nick" ) {
+		_e += "<td class=\"nick\">" + plain.target + "</td>"
+		_e += "<td class=\"content\">changed nick to <span class=\"new_nick\">" + transform(plain.payload) + "</span></td></tr>";
+	} else {
+		_e += "<td class=\"nick\">&lt;" + plain.target + "&gt;</td>"
+		_e += "<td class=\"content\">" + transform(plain.payload) + "</td></tr>";
+	}
+
+	by.getClient().publish("/" + channel.split("#").join("") + "/latest", { payload: _e });
+
 	push(JSON.stringify(plain), void 0, channel);
 }
 
@@ -194,7 +224,7 @@ var _render = function ( cn, dh, cb ) {
 				y.push(_e);
 			}, function () {
 				x += y.reverse().join("\n");
-				x += "</tbody></table></div></body><script src=\"client.js\"></script></html>";
+				x += "</tbody></table></div></body>" + clientjs[0] + "/" + cn.split("#").join("") + "/latest" + clientjs[1] + "</html>";
 				
 				cb(x)
 			})
@@ -326,6 +356,9 @@ cindex =  "<!DOCTYPE html><html lang=\"en\">" + _style + "<head><title>channel i
 
 clogindex = ["<!DOCTYPE html><html lang=\"en\">" + _style + "<head><title>channel index</title></head><body>", "<div class=\"index\"><ul>",
 		"</ul></div></body></html>"]
+
+clientjs = ["<script type=\"text/javascript\">window.$$$ = function(u, cb, async) {c = document.createElement(\"script\"), c.src = u;async && (c.async = true);cb && (c.onload = cb);document.body.appendChild(c)};$$$(\"/echtzeit/client.js\", function () {var client = new echtzeit.Client('/echtzeit');client.subscribe('",
+	    "', function(data) {if(data&&data.payload){var jump=window.scrollY+window.innerHeight>=document.body.clientHeight-20;document.body.querySelector(\"tbody\").innerHTML += data.payload;jump&&(window.scrollTo(0,document.body.scrollHeight))}});}, true);</script>"]
 
 var srv = http.createServer(function (request, response) {
 	if ( request.url === "/client.js" )
