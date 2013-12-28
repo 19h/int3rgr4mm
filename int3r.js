@@ -19,7 +19,7 @@ var db = (function() {
 })();
 
 var dhash = function (stamp) {
-	return ~~(((+stamp || Date.now())+((-(new Date).getTimezoneOffset())*60000))/86400000);
+	return ~~(((+stamp || Date.now()))/86400000);
 };
 
 var spawn = function (dh, channel) {
@@ -187,16 +187,6 @@ var transform = function( str ) {
 	str = str || "";
 
 	return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
-	/*var x = "";
-
-	for(var i = 0; i < str.length; ++i)
-		if (str[i].charCodeAt(0) > 127)
-			x += '&#' + str[i].charCodeAt(0) + ';';
-		else
-			x += str[i]
-
-	return x;*/
 };
 
 var _style = "<style type=\"text/css\">*{font-family:\"Segoe UI\", Arial, Helvetica, sans-serif;font-size:10pt}body,html{margin:0;padding:0}a:hover,a:active,a:focus{color:red}ul{padding:0 0 0 2em}div.navigation{background:#eee;height:1.5em;left:0;padding:.333em .666em;position:fixed;top:0;width:100%}div.navigation span.title{color:#444;font-weight:700}div.index,div.log{margin:2.5em 0 0;padding:0 .333em 1em}div.channels{margin:1.5em 0 0;padding:0 .333em 1em}table.log{border-collapse:collapse}table.log tr td{border:0;padding:.1em .5em;vertical-align:top}table.log tr td.time{border-right:1px solid #eee}table.log tr td.time a{color:#444;text-decoration:none}table.log tr td.time a.time-anchor{position:relative;top:-2.5em;visibility:hidden}table.log tr.kick td.content{color:red;font-style:italic}table.log tr.message td.content{color:#000}table.log tr.message td.content span.inverse{background-color:#000;color:#FFF}table.log tr.message td.content a.inverse{background-color:#000}table.log tr.message td.content .italic{font-style:italic}table.log tr.message td.content .monospace{font-family:monospace;white-space:pre}a,a:visited,table.log tr.message td.nick{color:#c50}div.navigation span.nolink,table.log tr.action td.nick,table.log tr.join td.nick,table.log tr.quit td.nick,table.log tr.part td.nick,table.log tr.kick td.nick,table.log tr.nick td.nick,table.log tr.topic td.nick{color:#444}table.log tr td.time a:hover,table.log tr.message td.content .underline{text-decoration:underline}table.log tr.action td.content,table.log tr.join td.content,table.log tr.quit td.content,table.log tr.part td.content,table.log tr.nick td.content,table.log tr.topic td.content{color:#444;font-style:italic}table.log tr.kick td.content span.victim,table.log tr.nick td.content span.new_nick,table.log tr.topic td.content span.topic,table.log tr.message td.content .bold{font-weight:700}</style>";
@@ -204,58 +194,79 @@ var _style = "<style type=\"text/css\">*{font-family:\"Segoe UI\", Arial, Helvet
 var _render = function ( cn, dh, cb ) {
 	var dstamp = dstampFromDhash(dh);
 
-	_index ( cn, function (exists) {
-		var dlisttarget, previous, next;
+	var _default = function ( cn, dh, cb ) {
+		_index ( cn, function (exists) {
+			var dlisttarget, previous, next;
 
-		// compute link to previous day
-		previous = !exists ? "<span class=\"nolink\">previous (none)</span>" : (dlisttarget = dstampFromDhash( dh - 1 ), previous = "<a href=\"" + dlisttarget + "\">previous (" + dlisttarget + ")</a>")
+			// compute link to previous day
+			previous = !exists ? "<span class=\"nolink\">previous (none)</span>" : (dlisttarget = dstampFromDhash( dh - 1 ), previous = "<a href=\"" + dlisttarget + "\">previous (" + dlisttarget + ")</a>")
 
-		// compute link to next day
-		next = dh === dhash() ? "<span class=\"nolink\">next (none)</span>" : (dlisttarget = dlisttarget = dstampFromDhash( dh + 1 ), "<a href=\"" + dlisttarget + "\">next (" + dlisttarget + ")</a>")
+			// compute link to next day
+			next = dh === dhash() ? "<span class=\"nolink\">next (none)</span>" : (dlisttarget = dlisttarget = dstampFromDhash( dh + 1 ), "<a href=\"" + dlisttarget + "\">next (" + dlisttarget + ")</a>")
 
-		// compute link to latest
-		latest = dh === dhash() ? "<span class=\"nolink\">latest</span>" : "<a href=\"latest\">latest</a>";
+			// compute link to latest
+			latest = dh === dhash() ? "<span class=\"nolink\">latest</span>" : "<a href=\"latest\">latest</a>";
 
-		var _nav = "<div class=\"navigation\"><span class=\"title\">" + cn + " " + dstamp + "</span> | <a href=\"/\">index</a> | " + previous + " | " + next + " | " + latest + "</div>";
-		var x = "<!DOCTYPE html><html lang=\"en\"><head><title>" + cn + " logs - " + dstamp + "</title>" + _style + "</head><body>" + _nav + "<div class=\"log\"><table class=\"log\"><tbody>";
-		var y = [];
+			var _nav = "<div class=\"navigation\"><span class=\"title\">" + cn + " " + dstamp + "</span> | <a href=\"/\">index</a> | " + previous + " | " + next + " | " + latest + "</div>";
+			var x = "<!DOCTYPE html><html lang=\"en\"><head><title>" + cn + " logs - " + dstamp + "</title>" + _style + "</head><body>" + _nav + "<div class=\"log\"><table class=\"log\"><tbody>";
+			var y = [];
 
-		process.nextTick(function () {
-			read( cn, dh, function (a) {
-				var entry = JSON.parse(a.value),
-				    _stmp = stamp(a.version),
-				    _svbs = ~~(((a.version/1000)%1)*1000);
+			process.nextTick(function () {
+				read( cn, dh, function (a) {
+					var entry = JSON.parse(a.value),
+					    _stmp = stamp(a.version),
+					    _svbs = ~~(((a.version/1000)%1)*1000);
 
-				var _e = "<tr class=\"" + entry.type + "\">";
-				    _e += "<td class=\"time\"><a href=\"#" + _stmp + "." + _svbs + "\">" + _stmp + "</a><a name=\"" + _stmp + "." + _svbs + "\" class=\"time-anchor\">&nbsp;</a></td>";
+					var _e = "<tr class=\"" + entry.type + "\">";
+					    _e += "<td class=\"time\"><a href=\"#" + _stmp + "." + _svbs + "\">" + _stmp + "</a><a name=\"" + _stmp + "." + _svbs + "\" class=\"time-anchor\">&nbsp;</a></td>";
 
-				if (~["part", "quit", "join"].indexOf(entry.type)) {
-					_e += "<td class=\"nick\">*  " + entry.target + "</td>"
-					
-					if ( entry.type !== "join" ) {
-						_e += "<td class=\"content\">" + entry.type + "<span class=\"reason\">" + (entry.payload ? " (" + transform(entry.payload) + ")" : "") + "</span></td></tr>";
+					if (~["part", "quit", "join"].indexOf(entry.type)) {
+						_e += "<td class=\"nick\">*  " + entry.target + "</td>"
+						
+						if ( entry.type !== "join" ) {
+							_e += "<td class=\"content\">" + entry.type + "<span class=\"reason\">" + (entry.payload ? " (" + transform(entry.payload) + ")" : "") + "</span></td></tr>";
+						} else {
+							_e += "<td class=\"content\">joined</td></tr>";
+						}
+					} else if ( entry.type === "nick" ) {
+						_e += "<td class=\"nick\">" + entry.target + "</td>"
+						_e += "<td class=\"content\">changed nick to <span class=\"new_nick\">" + transform(entry.payload) + "</span></td></tr>";
 					} else {
-						_e += "<td class=\"content\">joined</td></tr>";
+						_e += "<td class=\"nick\">&lt;" + entry.target + "&gt;</td>"
+						_e += "<td class=\"content\">" + transform(entry.payload) + "</td></tr>";
 					}
-				} else if ( entry.type === "nick" ) {
-					_e += "<td class=\"nick\">" + entry.target + "</td>"
-					_e += "<td class=\"content\">changed nick to <span class=\"new_nick\">" + transform(entry.payload) + "</span></td></tr>";
-				} else {
-					_e += "<td class=\"nick\">&lt;" + entry.target + "&gt;</td>"
-					_e += "<td class=\"content\">" + transform(entry.payload) + "</td></tr>";
-				}
 
-				_e = _e.replace(/\b((https?:\/\/)|www\.)([^\s()<>]+(?:\([\w\d]+\)|([^,\.\(\)<>!?\s]|\/)))/g,function(url,httpwww,http,hostandpath){if(!http){url='http://'+url;}return '<a href="'+url+'">'+hostandpath+'</a>'});
+					_e = _e.replace(/\b((https?:\/\/)|www\.)([^\s()<>]+(?:\([\w\d]+\)|([^,\.\(\)<>!?\s]|\/)))/g,function(url,httpwww,http,hostandpath){if(!http){url='http://'+url;}return '<a href="'+url+'">'+hostandpath+'</a>'});
 
-				y.push(_e);
-			}, function () {
-				x += y.reverse().join("\n");
-				x += "</tbody></table></div></body>" + (dh === dhash() ? clientjs[0] + "/" + cn.split("#").join("").split(".").join("") + "/latest" + clientjs[1] : "") + "</html>";
-				
-				cb(x)
-			})
-		});
-	}, dh - 1);
+					y.push(_e);
+				}, function () {
+					x += y.reverse().join("\n");
+					x += "</tbody></table></div></body>" + (dh === dhash() ? clientjs[0] + "/" + cn.split("#").join("").split(".").join("") + "/latest" + clientjs[1] : "") + "</html>";
+					
+					cb(x)
+				})
+			});
+		}, dh - 1);
+	}
+
+	// bailout. we must not transform the current epoch
+	if ( dh === dhash() ) return _default( cn, dh, cb );
+
+	return cache.get(cn + "." + dh, function (err, data) {
+		if ( err ) {
+			var cx = cb;
+
+			cb = function (x) {
+				cache.put(cn + "." + dh, x, function () {
+					return cx(x);
+				});
+			}
+
+			return _default( cn, dh, cb );
+		}
+
+		return cb(data);
+	})
 };
 
 var index_loop = function (start, cb, _db) {
