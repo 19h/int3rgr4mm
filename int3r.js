@@ -18,6 +18,8 @@ var db = (function() {
 	}
 })();
 
+var cache = hl("./logs/cache.db");
+
 var dhash = function (stamp) {
 	return ~~(((+stamp || Date.now()))/86400000);
 };
