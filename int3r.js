@@ -95,7 +95,8 @@ var opts = {
 	quakenet: true,
 	showErrors: true,
 	sep: "\u9999",
-	debug: true
+	debug: true,
+	preventCrawler: true
 };
 
 var irc = require("irc"),
@@ -392,7 +393,7 @@ var srv = http.createServer(function (request, response) {
 			return response.end( cindex );
 		}
 
-		if ( request.url === "/robots.txt" ) {
+		if ( request.url === "/robots.txt" && opts.preventCrawler ) {
 			return response.writeHead(200, {
 				"Content-type": "text/plain"
 			}), response.end("User-agent: *\nDisallow: /");
